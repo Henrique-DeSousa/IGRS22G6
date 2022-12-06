@@ -1,0 +1,19 @@
+protected void doMessage(SipServletRequest request)
+			throws ServletException, IOException {
+		// Some logs to show the content of the Registrar database.
+		log("MESSAGE:***");
+		Iterator<Map.Entry<String,String>> it = RegistrarDB.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String,String> pairs = (Map.Entry<String,String>)it.next();
+			log(pairs.getKey() + " = " + pairs.getValue());
+		}
+		log("MESSAGE:***");
+
+		String aor = getAttr(request.getHeader("To"), "sip:"); // Get the To AoR
+		log("MESSAGE: To: " + aor);
+		if (!RegistrarDB.containsKey(aor)  ) { // To AoR not in the database, reply 404
+			if(getAttr(request.getHeader("To"),"sip:").contains("alerta@acme.pt")){
+				if( !getAttr(request.getHeader("From"),"sip:").contains("gestor@acme.pt") ){
+					request.getProxy().proxyTo(factory.createURI(RegistrarDB.get("sip:gestor@acme.pt")));
+
+				}
