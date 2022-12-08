@@ -5,6 +5,7 @@ package org.mobicents.servlet.sip.example;
 
 import java.util.*;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import javax.servlet.sip.SipServlet;
 import javax.servlet.sip.SipServletMessage;
@@ -26,7 +27,7 @@ public class Redirect extends SipServlet {
 	private static final long serialVersionUID = 1L;
 	static private Map<String, String> RegistrarDB; // The Location Database 
 	static private SipFactory factory;              // Factory for creating Req.s and URIs
-
+	public ArrayList<String> List;
 	public Redirect() {
 		super();
 	}
@@ -34,6 +35,7 @@ public class Redirect extends SipServlet {
 	public void init() {
 		factory = (SipFactory) getServletContext().getAttribute(SIP_FACTORY);
 		RegistrarDB = new HashMap<String,String>();
+		List= new ArrayList<String>(); 
 	}
 
 	/**
@@ -100,34 +102,99 @@ public class Redirect extends SipServlet {
 
 		String aor = getAttr(request.getHeader("To"), "sip:"); // Get the To AoR
 		log("INVITE: To: " + aor);
-		if (!RegistrarDB.containsKey(aor)  ) { // To AoR not in the database, reply 404
+		if (!RegistrarDB.containsKey(aor) && RegistrarDB.containsKey(getAttr(request.getHeader("From"), "sip:")) ) { // To AoR not in the database, reply 404
 			if(getAttr(request.getHeader("To"),"sip:").contains("alerta@acme.pt")){
-				if( !getAttr(request.getHeader("From"),"sip:").contains("gestor@acme.pt") ){
+				if( !getAttr(request.getHeader("From"),"sip:").contains("gestor@acme.pt") && RegistrarDB.containsKey("sip:gestor@acme.pt")){
 					request.getProxy().proxyTo(factory.createURI(RegistrarDB.get("sip:gestor@acme.pt")));
-					
+
 				}
+				else{
+					SipServletResponse response; 
+					response = request.createResponse(404);
+					response.send();}
 			}
+
 			else{
 				SipServletResponse response; 
 				response = request.createResponse(404);
 				response.send();}	
-			/*	request.createResponse(100).send();
-	    	Proxy proxy = request.getProxy();
-	    	ArrayList<URI> addrList = new ArrayList<URI>();
-	    	addrList.add(factory.createURI("sip:announcement@127.0.0.1:5080"));
-	    	proxy.proxyTo(addrList);
-	    	SipServletRequest infoReq = factory.createRequest(request.getApplicationSession(), "INFO", "sip:server@a6.pt", "sip:announcement@127.0.0.1:5080");
-	    	infoReq.send();*/
 
-			/*	B2buaHelper b2bua= request.getB2buaHelper();
-	    	SipServletRequest req = b2bua.createRequest(request);
-	    	req.setRequestURI(factory.createURI("sip:announcement@127.0.0.1:5080"));
-	    	req.send();*/
 		}else{
-			request.getProxy().proxyTo(factory.createURI(RegistrarDB.get(getAttr(request.getHeader("To"),"sip:"))));
+			SipServletResponse response; 
+			response = request.createResponse(403);
+			response.send();}
+	}
+
+	protected void doMessage(SipServletRequest request)
+			throws ServletException, IOException {
+		// Some logs to show the content of the Registrar database.
+		log("MESSAGE:***");
+		Iterator<Map.Entry<String,String>> it = RegistrarDB.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<String,String> pairs = (Map.Entry<String,String>)it.next();
+			log(pairs.getKey() + " = " + pairs.getValue());
+		}
+		log("MESSAGE:***");
+
+		String aor = getAttr(request.getHeader("To"), "sip:"); // Get the To AoR
+		log("MESSAGE: To: " + aor);
+		if (!RegistrarDB.containsKey(aor) && RegistrarDB.containsKey(getAttr(request.getHeader("From"), "sip:")) ) { // To AoR not in the database, reply 404
+			if(getAttr(request.getHeader("To"),"sip:").contains("alerta@acme.pt")){
+				if( !getAttr(request.getHeader("From"),"sip:").contains("gestor@acme.pt") && RegistrarDB.containsKey("sip:gestor@acme.pt") ){
+					request.getProxy().proxyTo(factory.createURI(RegistrarDB.get("sip:gestor@acme.pt")));
+				}
+				else{
+					String s = new String(request.getRawContent(),StandardCharsets.UTF_8);
+					if(s.contains("sip:colaborador")){
+						String [] message = s.split(" ");
+						if(RegistrarDB.containsKey(message[1])){
+							if(message[0].contains("ADD")){
+								List.add(message[1]);
+								SipServletResponse response; 
+								response = request.createResponse(200);
+								response.send();
+							}
+							else{
+								List.remove(message[1]);
+								SipServletResponse response; 
+								response = request.createResponse(200);
+								response.send();
+							}
+						}
+						else{
+							SipServletResponse response; 
+							response = request.createResponse(404);
+							response.send();
+						}
+					}
+					else{
+						if(s.contains("CONF")){
+						}
+						else{
+							for(Map.Entry<String,String> entry: RegistrarDB.entrySet()){
+								if(!entry.getKey().contains("sip:gestor"))
+									request.getProxy().proxyTo(factory.createURI(RegistrarDB.get(entry.getKey()))); 
+							}
+						}
+					}
+
+				}
+			}
+
+			else{
+				SipServletResponse response; 
+				response = request.createResponse(404);
+				response.send();}	
+		}
+		else{
+			SipServletResponse response; 
+			response = request.createResponse(404);
+			response.send();
 		}
 	}
-	
+
+
+
 
 	/**
 	 * Auxiliary function for extracting attribute values
