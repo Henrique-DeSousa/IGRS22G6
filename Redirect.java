@@ -60,17 +60,13 @@ public class Redirect extends SipServlet {
 				SipServletResponse response; 
 				response = request.createResponse(200);
 				response.send();
-			}
-			else{
-
+			}else{
 				RegistrarDB.remove(aor);
 				SipServletResponse response; 
 				response = request.createResponse(200);
 				response.send();
 			}
-		}
-		else{
-
+		}else{
 			SipServletResponse response; 
 			response = request.createResponse(403);
 			response.send();
@@ -120,8 +116,7 @@ public class Redirect extends SipServlet {
 					SipServletResponse response;
 					response = request.createResponse(404);
 					response.send();
-				}
-				else{
+				}else{
 					if(getAttr(request.getHeader("From"),"sip:").contains("gestor") || getAttr(request.getHeader("From"),"sip:").contains("colaborador")){
 						request.getProxy().proxyTo(factory.createURI("sip:conference@127.0.0.1:5070"));
 						number_calls++;
@@ -133,11 +128,10 @@ public class Redirect extends SipServlet {
 						}
 					}
 				}
-			}
-		else{
-			SipServletResponse response; 
-			response = request.createResponse(403);
-			response.send();}
+			}else{
+				SipServletResponse response; 
+				response = request.createResponse(403);
+				response.send();}
 	}
 
 	protected void doMessage(SipServletRequest request)
@@ -174,8 +168,7 @@ public class Redirect extends SipServlet {
 									log(List.get(i));
 								number_messages++;
 								log("NUMBER OF MESSAGES: " + Integer.toString(number_messages));
-							}
-							else if(message[0].contains("REMOVE")){
+							}else if(message[0].contains("REMOVE")){
 								List.remove(message[1]);
 								SipServletResponse response; 
 								response = request.createResponse(200);
@@ -185,14 +178,12 @@ public class Redirect extends SipServlet {
 								number_messages++;
 								log("NUMBER OF MESSAGES: " + Integer.toString(number_messages));
 							}
-						}
-						else{
+						}else{
 							SipServletResponse response; 
 							response = request.createResponse(404);
 							response.send();
 						}
-					}
-					else{
+					}else{
 						if(s.contains("CONF")){
 
 							for(Map.Entry<String,String> entry: RegistrarDB.entrySet()){
@@ -204,14 +195,12 @@ public class Redirect extends SipServlet {
 									response = request.createResponse(200);
 									response.send();
 								}
-
 							}
 							number_messages++;
 							number_conferences++;
 							log("NUMBER OF MESSAGES: " + Integer.toString(number_messages));
 							log("NUMBER OF CONFERENCES: " + Integer.toString(number_conferences));
-						}
-						else{
+						}else{
 							for(Map.Entry<String,String> entry: RegistrarDB.entrySet()){
 								if(!entry.getKey().contains("sip:gestor"))
 									request.getProxy().proxyTo(factory.createURI(RegistrarDB.get(entry.getKey())));
@@ -223,14 +212,11 @@ public class Redirect extends SipServlet {
 					}
 
 				}
-			}
-
-			else{
+			}else{
 				SipServletResponse response; 
 				response = request.createResponse(404);
 				response.send();}	
-		}
-		else{
+		}else{
 			SipServletResponse response; 
 			response = request.createResponse(404);
 			response.send();
