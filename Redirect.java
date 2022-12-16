@@ -54,6 +54,7 @@ public class Redirect extends SipServlet {
 		String contact = getAttr(contactHeader, "sip:");
 		String [] credenciais = aor.split("@");
 		String dominio = credenciais[1];
+		
 		if(dominio.compareTo("acme.pt")==0){
 			if(!contactHeader.contains("expires=0")){
 				RegistrarDB.put(aor, contact);
@@ -105,7 +106,6 @@ public class Redirect extends SipServlet {
 					request.getProxy().proxyTo(factory.createURI(RegistrarDB.get("sip:gestor@acme.pt")));
 					number_calls++;
 					log("NUMBER OF CALLS: " + Integer.toString(number_calls));
-					
 				}else{
 					
 					SipServletResponse response; 
@@ -185,7 +185,6 @@ public class Redirect extends SipServlet {
 						}
 					}else{
 						if(s.contains("CONF")){
-
 							for(Map.Entry<String,String> entry: RegistrarDB.entrySet()){
 								if(!entry.getKey().contains("sip:gestor") && entry.getKey().contains("sip:colaborador")){
 									SipServletRequest reques= factory.createRequest(request.getApplicationSession(),"MESSAGE","sip:alerta@acme.pt",RegistrarDB.get(entry.getKey()));
@@ -207,10 +206,8 @@ public class Redirect extends SipServlet {
 									number_messages++;
 							}
 							log("NUMBER OF MESSAGES: " + Integer.toString(number_messages));
-
 						}
 					}
-
 				}
 			}else{
 				SipServletResponse response; 
@@ -222,9 +219,6 @@ public class Redirect extends SipServlet {
 			response.send();
 		}
 	}
-
-		
-
 
 	/**
 	 * Auxiliary function for extracting attribute values
@@ -243,7 +237,4 @@ public class Redirect extends SipServlet {
 		}
 		return str.substring(indexStart, indexStop);
 	}
-
-
-
 }
